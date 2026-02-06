@@ -1,0 +1,211 @@
+# ===============================
+# 1ï¸âƒ£ Import Libraries
+# ===============================
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import matplotlib.pyplot as plt
+from sklearn import tree
+
+# ===============================
+# 2ï¸âƒ£ Load Dataset
+# ===============================
+data = pd.read_csv('Iris.csv')
+print("First 5 rows of dataset:\n", data.head())
+
+# ===============================
+# 3ï¸âƒ£ Handle Missing Values
+# ===============================
+print("\nMissing values before drop:\n", data.isnull().sum())
+data = data.dropna() # Remove rows with missing values
+print("\nMissing values after drop:\n", data.isnull().sum())
+
+# ===============================
+# 4ï¸âƒ£ Select Features and Target
+# ===============================
+X = data.drop(columns=['Id', 'Species']) # Input features
+y = data['Species'] # Target variable
+
+# ===============================
+# 5ï¸âƒ£ Split Dataset (Train/Test)
+# ===============================
+X_train, X_test, y_train, y_test = train_test_split(
+X, y, test_size=0.3, random_state=42
+)
+
+# ===============================
+# 6ï¸âƒ£ Create & Train Decision Tree Classifier
+# ===============================
+dt_clf = DecisionTreeClassifier() # Initialize classifier
+dt_clf.fit(X_train, y_train) # Train the model
+
+# ===============================
+# 7ï¸âƒ£ Make Predictions on Test Data
+# ===============================
+y_pred = dt_clf.predict(X_test)
+
+# ===============================
+# 8ï¸âƒ£ Evaluate Model Performance
+# ===============================
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# ===============================
+# 9ï¸âƒ£ Visualize the Decision Tree
+# ===============================
+feature_names = ['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']
+target_names = ['Iris_setosa', 'Iris_versicolor', 'Iris_virginica']
+
+plt.figure(figsize=(12,6))
+tree.plot_tree(
+dt_clf,
+feature_names=feature_names,
+class_names=target_names,
+filled=True
+)
+plt.show()
+
+# ===============================
+# ðŸ”Ÿ Predict on New Data
+# ===============================
+new_data = pd.DataFrame({
+'SepalLengthCm': [4.6],
+'SepalWidthCm': [3.1],
+'PetalLengthCm': [1.5],
+'PetalWidthCm': [0.2]
+})
+
+prediction = dt_clf.predict(new_data)
+print("\nPrediction for new data:", prediction)
+
+
+
+
+
+--------------------------------------------------------------
+
+# Import necessary libraries
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. Load the dataset
+data = load_breast_cancer(as_frame=True)
+df = data.frame
+
+# 1a. First 5 rows
+print("First 5 rows:")
+print(df.head())
+
+# 1b. Shape of the dataset
+print("\nShape of the dataset:", df.shape)
+
+# 1c. Data types of all features
+print("\nData types:")
+print(df.dtypes)
+
+# 2a. Check for missing values
+print("\nMissing values per column:")
+print(df.isnull().sum())
+
+# 2b. Handle missing values â†’ This dataset has ZERO missing values, so no action needed
+
+# 2c. Check for duplicate records and remove them
+print("\nNumber of duplicate rows:", df.duplicated().sum())
+df = df.drop_duplicates() # just in case, though none exist
+print("Shape after duplicate removal:", df.shape)
+
+# 3. Separate features (X) and target (y)
+X = df.drop('target', axis=1)
+y = df['target'] # 0 = malignant, 1 = benign
+
+print("\nShape of X (features):", X.shape)
+print("Shape of y (target):", y.shape)
+
+# 4. Split into training and testing sets (80-20 split)
+X_train, X_test, y_train, y_test = train_test_split(
+X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+print("\nTraining set shape:", X_train.shape, y_train.shape)
+print("Testing set shape:", X_test.shape, y_test.shape)
+
+# 5. Apply scaling (very important for SVM, Logistic Regression, etc.)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# No encoding needed (all features are numeric, target already 0/1)
+
+# Models to compare (4 algorithms as required)
+models = {
+"Logistic Regression": LogisticRegression(max_iter=1000),
+"Decision Tree": DecisionTreeClassifier(random_state=42),
+"Random Forest": RandomForestClassifier(random_state=42),
+"SVM": SVC(kernel='rbf', random_state=42),
+# "Naive Bayes": GaussianNB() # you can add this as 5th if you want
+}
+
+# Dictionaries to store results
+train_accuracies = {}
+test_accuracies = {}
+confusion_matrices = {}
+
+# 6â€“8. Train, predict, evaluate each model
+for name, model in models.items():
+# Use scaled data for models sensitive to scale
+if name in ["Logistic Regression", "SVM"]:
+model.fit(X_train_scaled, y_train)
+y_pred = model.predict(X_test_scaled)
+y_train_pred = model.predict(X_train_scaled)
+else:
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+y_train_pred = model.predict(X_train)
+
+train_acc = accuracy_score(y_train, y_train_pred)
+test_acc = accuracy_score(y_test, y_pred)
+
+train_accuracies[name] = train_acc
+test_accuracies[name] = test_acc
+
+print(f"\n=== {name} ===")
+print(f"Training Accuracy: {train_acc:.4f}")
+print(f"Testing Accuracy: {test_acc:.4f}")
+print("Confusion Matrix:")
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
+# Optional: nice visualization
+# sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+# plt.title(f'Confusion Matrix - {name}')
+# plt.show()
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=['Malignant (0)', 'Benign (1)']))
+
+# 9. Compare models based on test accuracy
+print("\nModel Comparison (Test Accuracy):")
+for name, acc in sorted(test_accuracies.items(), key=lambda x: x[1], reverse=True):
+print(f"{name:20} : {acc:.4f}")
+
+best_model = max(test_accuracies, key=test_accuracies.get)
+print(f"\nBest performing model: {best_model} with accuracy {test_accuracies[best_model]:.4f}")
+
+# 10. Check for overfitting (big gap between train and test accuracy)
+print("\nOverfitting Check (Train vs Test Accuracy):")
+for name in models:
+gap = train_accuracies[name] - test_accuracies[name]
+status = "Overfitting detected" if gap > 0.08 else "Good generalization" if gap >= 0 else "Underfitting possible"
+print(f"{name:20} : Train {train_accuracies[name]:.4f} | Test {test_accuracies[name]:.4f} | Gap {gap:.4f} â†’ {status}")
